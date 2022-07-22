@@ -76,8 +76,9 @@ export default class TimeCapsuleNode extends AudioParamsNode(Video) {
     }
 
     this._mesh.geometry = GLTFs.screen.scene.children[0].geometry;
-    this._mesh.position.y = 0.5;
-    this._mesh.position.z = -0.5;
+    this._mesh.position.y = 0.33;
+    this._mesh.position.z = -0.48;
+    this._mesh.scale.y = 1.1565;
 
     this._capsule = cloneObject3D(GLTFs.timeCapsule.scene);
     this.editor.renderer.addBatchedObject(this._capsule);
