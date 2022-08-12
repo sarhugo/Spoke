@@ -1,4 +1,3 @@
-import screenUrl from "../../assets/time-capsule/screen.glb";
 import timeCapsuleUrl from "../../assets/time-capsule/time-capsule.glb";
 import spokeLandingVideo from "../../assets/video/SpokePromo.mp4";
 import { GLTFLoader } from "../gltf/GLTFLoader";
@@ -11,11 +10,7 @@ import isHLS from "../utils/isHLS";
 import { RethrownError } from "../utils/errors";
 import { getObjectPerfIssues } from "../utils/performance";
 
-const GLTFs = {
-  loaded: false,
-  timeCapsule: null,
-  screen: null
-};
+let timeCapsuleModel = null;
 
 export default class TimeCapsuleNode extends AudioParamsNode(Video) {
   static componentName = "time-capsule";
@@ -27,18 +22,12 @@ export default class TimeCapsuleNode extends AudioParamsNode(Video) {
   };
 
   static async load() {
-    if (GLTFs.loaded) {
-      return Promise.resolve(GLTFs);
+    if (timeCapsuleModel) {
+      return Promise.resolve(timeCapsuleModel);
     }
 
-    await Promise.all([new GLTFLoader(timeCapsuleUrl).loadGLTF(), new GLTFLoader(screenUrl).loadGLTF()]).then(
-      models => {
-        [GLTFs.timeCapsule, GLTFs.screen] = models;
-        GLTFs.loaded = true;
-      }
-    );
-
-    return GLTFs;
+    timeCapsuleModel = await new GLTFLoader(timeCapsuleUrl).loadGLTF();
+    return timeCapsuleModel;
   }
 
   static async deserialize(editor, json, loadAsync, onError) {
@@ -71,16 +60,11 @@ export default class TimeCapsuleNode extends AudioParamsNode(Video) {
     this.controls = false;
     this._projection = "custom";
 
-    if (!GLTFs.loaded) {
+    if (!timeCapsuleModel) {
       throw new Error("TimeCapsule must be loaded before it can be used. Await TimeCapsule.load()");
     }
 
-    this._mesh.geometry = GLTFs.screen.scene.children[0].geometry;
-    this._mesh.position.y = 0.33;
-    this._mesh.position.z = -0.48;
-    this._mesh.scale.y = 1.1565;
-
-    this._capsule = cloneObject3D(GLTFs.timeCapsule.scene);
+    this._capsule = cloneObject3D(timeCapsuleModel.scene);
     this.editor.renderer.addBatchedObject(this._capsule);
     this._capsule.traverse(object => {
       if (object.material && object.material.isMeshStandardMaterial) {
@@ -88,6 +72,10 @@ export default class TimeCapsuleNode extends AudioParamsNode(Video) {
         object.material.needsUpdate = true;
       }
     });
+    this._screen = this._capsule.children.find(o => o.name === "Screen");
+    this._screen.material = this._mesh.material;
+    this._mesh.visible = false;
+
     this.add(this._capsule);
   }
 
@@ -105,11 +93,10 @@ export default class TimeCapsuleNode extends AudioParamsNode(Video) {
     if (nextSrc === this._canonicalUrl && nextSrc !== "") {
       return;
     }
-
+    this._screen.visible = false;
     this._canonicalUrl = src || "";
 
     this.issues = [];
-    this._mesh.visible = false;
 
     this.hideErrorIcon();
     this.showLoadingCube();
@@ -136,6 +123,8 @@ export default class TimeCapsuleNode extends AudioParamsNode(Video) {
       }
 
       await super.load(accessibleUrl, contentType);
+      this._mesh.visible = false;
+      this._screen.visible = true;
 
       if (isHls && this.hls) {
         this.hls.stopLoad();
