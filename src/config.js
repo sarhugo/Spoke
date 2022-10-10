@@ -69,9 +69,6 @@ import HubsSoundPackSource from "./ui/assets/sources/HubsSoundPackSource";
 import TroikaTextNode from "./editor/nodes/TroikaTextNode";
 import TroikaTextNodeEditor from "./ui/properties/TroikaTextNodeEditor";
 
-import TimeCapsuleNode from "./editor/nodes/TimeCapsuleNode";
-import TimeCapsuleNodeEditor from "./ui/properties/TimeCapsuleNodeEditor";
-
 export function createEditor(api, settings) {
   const editor = new Editor(api, settings);
 
@@ -103,8 +100,6 @@ export function createEditor(api, settings) {
   editor.registerNode(AudioZoneNode, AudioZoneNodeEditor);
   editor.registerNode(TroikaTextNode, TroikaTextNodeEditor);
   editor.registerNode(MirrorNode, MirrorNodeEditor);
-
-  editor.registerNode(TimeCapsuleNode, TimeCapsuleNodeEditor);
 
   editor.registerSource(new ElementsSource(editor));
   editor.registerSource(new MyAssetsSource(editor));
